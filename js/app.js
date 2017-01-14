@@ -2,12 +2,13 @@ var OTP = "http://localhost:8080"
 var STOPS = "/otp/routers/default/index/stops"
 var PLAN = "/otp/routers/default/profile"
 
-function planUrl(from, to) {
-  return OTP + PLAN + "?from=" + from.lat + "," + from.lon + "&to=" + to.lat + "," + to.lon + "&maxWalkTime=5&accessModes=WALK&egressModes=WALK";
+function planUrl(from, to, date) {
+  return OTP + PLAN + "?from=" + from.lat + "," + from.lon + "&to=" + to.lat + "," + to.lon + "&maxWalkTime=5&accessModes=WALK&egressModes=WALK&date=" + date;
 }
 
 // TODO: make the interface here better
-function timetableUrl(options) {
+function timetableUrl(options, date) {
+  var epoch = new Date(date).getTime()/1000;
   var patternIds = [], origs = [], dests = [];
   options.forEach(function(opt) {
     opt.transit[0].segmentPatterns.forEach(function(seg) {
@@ -18,7 +19,7 @@ function timetableUrl(options) {
       }
     });
   });
-  return OTP + "/otp/routers/default/index/stoptime/schedules?patternIds=" + patternIds + "&origs=" + origs + "&dests=" + dests + "&startTime=1484352929";
+  return OTP + "/otp/routers/default/index/stoptime/schedules?patternIds=" + patternIds + "&origs=" + origs + "&dests=" + dests + "&startTime=" + epoch;
 }
 
 function loadStops() {
@@ -39,11 +40,12 @@ function plan() {
   }
   var start = stop("#start");
   var end = stop("#end");
+  var date = d3.select("#datetime").node().value;
 
-  if (!start || !end)
+  if (!start || !end || !date)
     return
 
-  d3.json(planUrl(start, end), function(resp) {
+  d3.json(planUrl(start, end, date), function(resp) {
     var options = [];
     resp.options.forEach(function(opt) {
       if (opt.transit && opt.transit.length == 1) {
@@ -51,11 +53,12 @@ function plan() {
       }
     })
   
-    d3.json(timetableUrl(options), table);
+    d3.json(timetableUrl(options, date), table);
   })
 }
 
 function table(times) {
+  d3.select("#content").html("");
   var table = d3.select("#content").append("table").attr("class", "table is-striped");
   table.append("thead").html("<th>Route</th><th>Depart</th><th>Arrive</th>");
   var tbody = table.append("tbody");
@@ -64,7 +67,7 @@ function table(times) {
     .data(times)
     .enter().append("tr")
       .html(function(d) {
-        var route = d.route.longName;
+        var route = d.route.longName || d.route.shortName;
         var st = sec2time(d.orig.realtimeDeparture);
         var en = sec2time(d.dest.realtimeArrival); 
         return "<td>" + route + "</td><td>" + st + "</td><td>" + en + "</td>";
@@ -82,4 +85,6 @@ function sec2time(t) {
 // main
 loadStops();
 
-d3.selectAll("#start, #end").on("change", plan);
+d3.selectAll("#start, #end, #datetime").on("change", plan);
+
+flatpickr(".datetime", {});

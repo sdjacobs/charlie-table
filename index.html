@@ -4,6 +4,8 @@
   <title>MBTA Schedules</title>
   <script src="d3.v4.min.js"></script>
   <link rel="stylesheet" type="text/css" href='https://cdnjs.cloudflare.com/ajax/libs/bulma/0.3.0/css/bulma.min.css'></link>
+  <link rel="stylesheet" href="https://unpkg.com/flatpickr/dist/flatpickr.min.css">
+  <script src="https://unpkg.com/flatpickr"></script>
 </head>
 
 <body>
@@ -15,13 +17,14 @@
     
     <div class="panel-block">
       <div style="width:100%;">
-        <label class="label">Start</label></p>
         <p class="control">
-          <input class="input" id="start" list="stops" />
+          <input placeholder="Start..." class="input" id="start" list="stops" />
         </p>
-        <label class="label">End</label>
         <p class="control">
-          <input class="input" id="end" list="stops" />
+          <input placeholder="End..." class="input" id="end" list="stops" />
+        </p>
+        <p class="control">
+          <input class="datetime input" id="datetime" type="text" placeholder="Select Date..">
         </p>
       </div>
     </div>
