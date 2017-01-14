@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<head>
+  <title>MBTA Schedules</title>
+  <script src="d3.v4.min.js"></script>
+  <link rel="stylesheet" type="text/css" href='https://cdnjs.cloudflare.com/ajax/libs/bulma/0.3.0/css/bulma.min.css'></link>
+</head>
+
+<body>
+  <section class="section">
+  <nav class="panel">
+    <p class="panel-heading">
+      Schedules
+    </p>
+    
+    <div class="panel-block">
+      <div style="width:100%;">
+        <label class="label">Start</label></p>
+        <p class="control">
+          <input class="input" id="start" list="stops" />
+        </p>
+        <label class="label">End</label>
+        <p class="control">
+          <input class="input" id="end" list="stops" />
+        </p>
+      </div>
+    </div>
+    
+    <div id="content" class="panel-block"></div>
+
+  </nav>
+</section>
+
+  <script src="js/app.js"></script>
+
+  <datalist id="stops"></datalist>
+</body>
