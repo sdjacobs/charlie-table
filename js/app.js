@@ -1,5 +1,5 @@
 var OTP = "http://localhost:8080"
-var STOPS = "/otp/routers/default/index/stops"
+var STOPS = "/otp/routers/default/index/stops/autocomplete/"
 var PLAN = "/otp/routers/default/profile"
 
 function planUrl(from, to, date) {
@@ -22,11 +22,11 @@ function timetableUrl(options, date) {
   return OTP + "/otp/routers/default/index/stoptime/schedules?patternIds=" + patternIds + "&origs=" + origs + "&dests=" + dests + "&startTime=" + epoch;
 }
 
-function loadStops() {
-  d3.json(OTP + STOPS, function(stops) {
-    var stations = stops.filter(function(d) { return d.cluster })
-    d3.select("#stops").selectAll("option")
-      .data(stations)
+function loadStops(datalist, auto) {
+  d3.json(OTP + STOPS + auto, function(stops) {
+    datalist.html("");
+    datalist.selectAll("option")
+      .data(stops)
       .enter().append("option")
         .attr("value", function(d) { return d.name })
   });
@@ -35,8 +35,10 @@ function loadStops() {
 function plan() {
 
   var stop = function(sel) {
+    var list = d3.select(sel).attr("list")
     var val = d3.select(sel).node().value;
-    return val ? d3.select("#stops option[value='" + val + "']").datum() : null;
+    var opt = d3.select("#" + list + " option[value='" + val + "']");
+    return val && opt.size() ? opt.datum() : null;
   }
   var start = stop("#start");
   var end = stop("#end");
@@ -74,16 +76,22 @@ function table(times) {
       });
 }
       
-
-function sec2time(t) {
-  var h = (t - t%3600)/3600;
-  t -= h * 3600;
-  var m = (t - t%60)/60;
-  return h + ":" + m;
-}
+var sec2time = (function() {
+  var time = d3.utcFormat("%I:%M %p")
+  return function(x) { return time(new Date(x * 1000)); }
+})()
 
 // main
-loadStops();
+d3.selectAll("#start, #end").each(function() {
+  var thiz = d3.select(this)
+  thiz.on("keypress", function() {
+    if (d3.event.charCode == 0)
+      return;
+    var val = this.value + d3.event.key;
+    if (val.length > 2)
+      loadStops(d3.select("#" + thiz.attr("list")), val);
+  })  
+})
 
 d3.selectAll("#start, #end, #datetime").on("change", plan);
 
