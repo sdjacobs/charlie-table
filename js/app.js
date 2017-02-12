@@ -3,23 +3,7 @@ var STOPS = "/otp/routers/default/index/stops/autocomplete/"
 var PLAN = "/otp/routers/default/profile"
 
 function planUrl(from, to, date) {
-  return OTP + PLAN + "?from=" + from.lat + "," + from.lon + "&to=" + to.lat + "," + to.lon + "&maxWalkTime=5&accessModes=WALK&egressModes=WALK&date=" + date;
-}
-
-// TODO: make the interface here better
-function timetableUrl(options, date) {
-  var epoch = new Date(date).getTime()/1000;
-  var patternIds = [], origs = [], dests = [];
-  options.forEach(function(opt) {
-    opt.transit[0].segmentPatterns.forEach(function(seg) {
-      if (patternIds.indexOf(seg.patternId) == -1) {
-        patternIds.push(seg.patternId);
-        origs.push(seg.fromIndex);
-        dests.push(seg.toIndex);
-      }
-    });
-  });
-  return OTP + "/otp/routers/default/index/stoptime/schedules?patternIds=" + patternIds + "&origs=" + origs + "&dests=" + dests + "&startTime=" + epoch;
+  return OTP + PLAN + "?from=" + from.lat + "," + from.lon + "&to=" + to.lat + "," + to.lon + "&maxWalkTime=2&accessModes=WALK&egressModes=WALK&date=" + date;
 }
 
 function loadStops(datalist, auto) {
@@ -48,14 +32,16 @@ function plan() {
     return
 
   d3.json(planUrl(start, end, date), function(resp) {
-    var options = [];
+    var sched = [];
     resp.options.forEach(function(opt) {
       if (opt.transit && opt.transit.length == 1) {
-        options.push(opt)
+        opt.transit.forEach(function(t) {
+          Array.prototype.push.apply(sched, t.schedule);
+        })
       }
     })
-  
-    d3.json(timetableUrl(options, date), table);
+    sched.sort(function(a, b) { return a.orig.realtimeDeparture - b.orig.realtimeDeparture });
+    table(sched);
   })
 }
 
