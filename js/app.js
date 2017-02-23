@@ -3,7 +3,7 @@ var STOPS = "/otp/routers/default/index/stops/autocomplete/"
 var PLAN = "/otp/routers/default/profile"
 
 function planUrl(from, to, date) {
-  return OTP + PLAN + "?from=" + from.lat + "," + from.lon + "&to=" + to.lat + "," + to.lon + "&maxWalkTime=2&accessModes=WALK&egressModes=WALK&date=" + date;
+  return OTP + PLAN + "?from=" + from.lat + "," + from.lon + "&to=" + to.lat + "," + to.lon + "&maxWalkTime=10&accessModes=WALK&egressModes=WALK&date=" + date +"&startTime=00:00:00&endTime=23:00:00";
 }
 
 function loadStops(datalist, auto) {
@@ -34,36 +34,83 @@ function plan() {
   d3.json(planUrl(start, end, date), function(resp) {
     var sched = [];
     resp.options.forEach(function(opt) {
-      if (opt.transit && opt.transit.length == 1) {
-        opt.transit.forEach(function(t) {
-          Array.prototype.push.apply(sched, t.schedule);
-        })
+      if (opt.transit) {
+        createAllSchedules(sched, opt.transit);
       }
     })
-    sched.sort(function(a, b) { return a.orig.realtimeDeparture - b.orig.realtimeDeparture });
+    sched.sort(function(a, b) { return a.start - b.start });
     table(sched);
+  })
+}
+
+function findBestTransitObj(time, transit) {
+  var best = null;
+  var bestTime=0;
+  transit.schedule.forEach(function(t) {
+    var thisTime = t.orig.realtimeDeparture;
+    if (thisTime > time + 5) {
+      if (best == null || thisTime < bestTime) {
+        best = t;
+        bestTime = thisTime;
+      }
+    }
+  })
+  return best;
+}
+
+// data object: {"routes": [], "schedule": [[]], "start":_, "end":_}
+function createAllSchedules(sched, transit) {
+  var first = transit[0];
+  first.schedule.forEach(function(o) {
+    var d = {"routes": [], "schedule": [], "start":0, "end":0};
+    d.routes.push(o.route);
+    var sch = [o.orig.realtimeDeparture, o.dest.realtimeArrival];
+    d.schedule.push(sch);
+    
+    for (var i = 1; i < transit.length; i++) {
+      var time = d.schedule[d.schedule.length-1][1];
+      var p = findBestTransitObj(time, transit[i]); // next schedule
+      if (p == null)
+        return; // skip to next object.
+      d.routes.push(p.route);
+      var sch = [p.orig.realtimeDeparture, p.dest.realtimeArrival];
+      d.schedule.push(sch);
+    }
+    
+    d.start = d.schedule[0][0];
+    d.end = d.schedule[d.schedule.length-1][1];
+    sched.push(d)
   })
 }
 
 function table(times) {
   d3.select("#content").html("");
   var table = d3.select("#content").append("table").attr("class", "table is-striped");
-  table.append("thead").html("<th>Route</th><th>Depart</th><th>Arrive</th>");
+  table.append("thead").html("<th>Route</th><th>Schedule</th>");
   var tbody = table.append("tbody");
   
-  tbody.selectAll("tr")
+  var rows = tbody.selectAll("tr")
     .data(times)
-    .enter().append("tr")
-      .html(function(d) {
-        var route = d.route.longName || d.route.shortName;
-        var st = sec2time(d.orig.realtimeDeparture);
-        var en = sec2time(d.dest.realtimeArrival); 
-        return "<td>" + route + "</td><td>" + st + "</td><td>" + en + "</td>";
-      });
+    .enter().append("tr");
+    
+  rows.append("td").html(function(d) { 
+      return d.routes.map(function(d) { return d.longName || d.shortName }).join(", ")
+    });
+  
+  rows.append("td").classed("flexbox", "true").selectAll("span.schedule")
+    .data(function(d) { return d.schedule })
+    .enter().append("span").classed("schedule", true)
+    .html(function(d) {
+      var st = sec2time(d[0]);
+      var en = sec2time(d[1]); 
+      var time = "<span class='sched-item'>" + st + "</span> <span class='sched-item'>" + en + "</span>";
+      return time; 
+    });
+  
 }
       
 var sec2time = (function() {
-  var time = d3.utcFormat("%I:%M %p")
+  var time = d3.utcFormat("%I:%M") // for AM/PM add "%p"
   return function(x) { return time(new Date(x * 1000)); }
 })()
 
