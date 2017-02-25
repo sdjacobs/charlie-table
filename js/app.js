@@ -9,10 +9,8 @@ function planUrl(from, to, date) {
 function plan() {
 
   var stop = function(sel) {
-    var list = d3.select(sel).attr("list")
-    var val = d3.select(sel).node().value;
-    var opt = d3.select("#" + list + " option[value='" + val + "']");
-    return val && opt.size() ? opt.datum() : null;
+    var name = d3.select(sel).node().value;
+    return stopByName.get(name);
   }
   var start = stop("#start");
   var end = stop("#end");
@@ -112,7 +110,7 @@ function table(times) {
     d3.select(this).style("background", function(d) { return d.col; })
   })
   
-  var labels = rows.append("td").classed("primary", true).html(function(d) { 
+  var labels = rows.append("td").classed("primary routename", true).html(function(d) { 
     return d.routes.map(function(d) { 
       return d.name;
     }).join(", ")
@@ -153,15 +151,12 @@ var sec2time = (function() {
 d3.selectAll("#start, #end, #datetime").on("change", plan);
 flatpickr(".datetime", {});
 
+var stopByName = null;
+
 d3.json(OTP + STOPS + "*", function(stops) {
-  var datalist = d3.select("#startStops")
-  datalist.html("");
-  datalist.selectAll("option")
-   .data(stops)
-    .enter().append("option")
-    .attr("value", function(d) { return d.name });
-  d3.select("#endStops").html(datalist.html());
-    
-  new Awesomplete(d3.select("#start").node(), {list: "#startStops"});
-  new Awesomplete(d3.select("#end").node(), {list: "#endStops"});
+  stopByName = d3.map(stops, function(d) { return d.name })
+  
+  var list = stops.map(function(d) { return d.name } );
+  new Awesomplete(d3.select("#start").node(), {list: list});
+  new Awesomplete(d3.select("#end").node(), {list: list});
 });

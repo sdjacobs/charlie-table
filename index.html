@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 <head>
-  <title>MBTA Schedules</title>
+  <title>Charlie Table</title>
   <script src="js/lib/d3.v4.min.js"></script>
   <link rel="stylesheet" type="text/css" href='css/bulma.min.css'></link>
   <link rel="stylesheet" href="css/flatpickr.min.css">
@@ -9,14 +9,22 @@
   <script src="js/lib/flatpickr.js"></script>
   <script src="js/lib/awesomplete.min.js"></script>
   <style>
+  /* override bulma */
   body, .input {
     font-family: monospace;
   }
+  .section {
+    padding: 1.5rem 1.5rem;
+  }
+  
   .secondary {
-    color: grey;
+    color: slategrey;
   }
   .secondary.routename {
     margin-left: 1em;
+  }
+  .primary.routename {
+    font-weight: bold;
   }
   </style>
 </head>
@@ -25,17 +33,17 @@
   <section class="section">
   <nav class="panel">
     <p class="panel-heading">
-      Schedules
+      Charlie Table
     </p>
     
     <div class="panel-block">
       <div style="width:100%;">
         <p class="control">
-          <input placeholder="Start..." class="input awesomplete" id="start" list="startStops" />
+          <input placeholder="Start..." class="input awesomplete" data-maxitems="20" id="start" />
         </p>
         <p class="control">
-          <input placeholder="End..." class="input awesomplete" id="end" list="endStops" />
-        </
+          <input placeholder="End..." class="input awesomplete" data-maxitems="20" id="end" />
+        </p>
         <p class="control">
           <input class="datetime input" id="datetime" type="text" placeholder="Select Date..">
         </p>
@@ -48,8 +56,5 @@
 </section>
 
   <script src="js/app.js"></script>
-
-  <datalist id="startStops"></datalist>
-  <datalist id="endStops"></datalist>
 
 </body>
