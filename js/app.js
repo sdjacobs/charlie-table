@@ -3,7 +3,7 @@ var STOPS = "/otp/routers/default/index/stops/autocomplete/"
 var PLAN = "/otp/routers/default/profile"
 
 function planUrl(from, to, date) {
-  return OTP + PLAN + "?from=" + from.lat + "," + from.lon + "&to=" + to.lat + "," + to.lon + "&maxWalkTime=10&accessModes=WALK&egressModes=WALK&date=" + date +"&startTime=00:00:00&endTime=23:00:00";
+  return OTP + PLAN + "?from=" + from.lat + "," + from.lon + "&to=" + to.lat + "," + to.lon + "&maxWalkTime=10&accessModes=WALK&egressModes=WALK&date=" + date +"&startTime=00:00:00&endTime=23:00:00&limit=4&orderBy=DIFFERENCE";
 }
 
 function loadStops(datalist, auto) {
@@ -88,33 +88,40 @@ function createAllSchedules(sched, transit) {
   })
 }
 
+function addColors(times) {
+  times.forEach(function(d) {
+    var length = -1;
+    var color = null;
+    d.routes.forEach(function(r, i) {
+      var x = d.schedule[i][1] - d.schedule[i][0];
+      if (x > length) {
+        length = x;
+        color = r["color"];
+      }
+    })
+    d.col = d3.color(color ? "#"+color : "grey");
+    d.col.opacity = 0.2;
+  });
+}
+
 function table(times) {
+  addColors(times)
   d3.select("#content").html("");
   var table = d3.select("#content").append("table").attr("class", "table is-striped");
   table.append("thead").html("<th>Route</th><th>Schedule</th>");
   var tbody = table.append("tbody");
-  
+
   var rows = tbody.selectAll("tr")
     .data(times)
     .enter().append("tr")
-    .style("background", function(d) {
-      var length = -1;
-      var color = null;
-      d.routes.forEach(function(r, i) {
-        var x = d.schedule[i][1] - d.schedule[i][0];
-        if (x > length) {
-          length = x;
-          color = r["color"];
-        }
-      })
-      if (color) {
-        var col = d3.color("#"+color);
-        col.opacity = 0.2;
-        return col;
-      }
-      return "lightgrey";
-    })
-    
+    .style("background", function(d) { return d.col });
+  
+  rows.on("mouseover", function(d) {
+    d3.select(this).style("background", function(d) { return d.col.darker(); })
+  }).on("mouseout", function(d) { 
+    d3.select(this).style("background", function(d) { return d.col; })
+  })
+  
   var labels = rows.append("td").classed("primary", true).html(function(d) { 
     return d.routes.map(function(d) { 
       return d.name;
@@ -141,7 +148,7 @@ function table(times) {
     var prim = d3.select(this).selectAll(".primary");
     var sec = d3.select(this).selectAll(".secondary");
     prim.on("click", function() { 
-      sec.style("display", visible ? "none" : null);
+      sec.transition().style("display", visible ? "none" : null);
       visible = !visible;
     })
   });
