@@ -22,6 +22,7 @@ function plan() {
   loader.show()
   d3.json(planUrl(start, end, date), function(resp) {
     loader.hide()
+    notification.hide();
     var sched = [];
     resp.options.forEach(function(opt) {
       if (opt.transit) {
