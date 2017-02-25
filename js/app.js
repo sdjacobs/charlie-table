@@ -102,7 +102,7 @@ function table(times) {
   addColors(times)
   d3.select("#content").html("");
   var table = d3.select("#content").append("table").attr("class", "table is-striped");
-  table.append("thead").html("<th>Route</th><th>Schedule</th>");
+  var head = table.append("thead").html("<th>Route</th><th>Schedule</th>");
   var tbody = table.append("tbody");
 
   var rows = tbody.selectAll("tr")
@@ -146,6 +146,9 @@ function table(times) {
       visible = !visible;
     })
   });
+  
+  makeFixedHeader(head, tbody);
+
 }
 
 function makeToggle(sel) {
@@ -180,4 +183,40 @@ d3.json(OTP + STOPS + "*", function(stops) {
   new Awesomplete(d3.select("#start").node(), {list: list});
   new Awesomplete(d3.select("#end").node(), {list: list});
 });
+
+function makeFixedHeader(head, body) {
+  var node = head.node();
+  var fixed = false;
+  var initTop = -1;
+
+  var th1 = head.select("th:first-child").node();
+  var th2 = head.select("th:last-child").node();
+  
+  var row = body.insert("tr", ":first-child")
+    .style("opacity","0").style("display", "none")
+    .html("<td>place</td><td>holder</td>");
+  
+  window.onscroll = function() {
+    var header = d3.select("thead").node()
+    var rect = header.getBoundingClientRect();
+    if (rect.top <= 0 && !fixed) {
+      row.style("display", null);
+      header.style.position = "fixed";
+      header.style.top = "-1em";
+      fixed = true;
+      initTop = node.parentNode.getBoundingClientRect().top;
+      th1.style.width = body.select("tr td:first-child").node().offsetWidth + "px";
+      th2.style.width = body.select("tr td:last-child").node().offsetWidth + "px";
+    }
+    else if (node.parentNode.getBoundingClientRect().top >= initTop) {
+      row.style("display", "none");
+      console.log("nullout")
+      header.style.position = null;
+      header.style.top = null;
+      th1.style.width = null;
+      th2.style.width = null;
+      fixed = false;
+    }
+  }
+}
 
