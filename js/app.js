@@ -96,11 +96,28 @@ function table(times) {
   
   var rows = tbody.selectAll("tr")
     .data(times)
-    .enter().append("tr");
+    .enter().append("tr")
+    .style("background", function(d) {
+      var length = -1;
+      var color = null;
+      d.routes.forEach(function(r, i) {
+        var x = d.schedule[i][1] - d.schedule[i][0];
+        if (x > length) {
+          length = x;
+          color = r["color"];
+        }
+      })
+      if (color) {
+        var col = d3.color("#"+color);
+        col.opacity = 0.2;
+        return col;
+      }
+      return "lightgrey";
+    })
     
   var labels = rows.append("td").classed("primary", true).html(function(d) { 
     return d.routes.map(function(d) { 
-      return "<span style='color:#" + d.color + "'>" + d.name + "</span>";
+      return d.name;
     }).join(", ")
   });
   
