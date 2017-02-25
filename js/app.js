@@ -19,13 +19,18 @@ function plan() {
   if (!start || !end || !date)
     return
 
+  loader.show()
   d3.json(planUrl(start, end, date), function(resp) {
+    loader.hide()
     var sched = [];
     resp.options.forEach(function(opt) {
       if (opt.transit) {
         createAllSchedules(sched, opt.transit);
       }
     })
+    if (sched.length == 0) {
+      notification.notify("No results found. Perhaps there is no data for this date.")
+    }
     sched.sort(function(a, b) { return a.start - b.start });
     sched.forEach(function(s) {
       s.routes.forEach(function(d) {
@@ -141,7 +146,20 @@ function table(times) {
     })
   });
 }
+
+function makeToggle(sel) {
+  var node = d3.select(sel);
+  return {
+    show: function() { node.style("display", "block"); },
+    hide: function() { node.style("display", "none"); },
+    notify: function(msg) { node.style("display", "block").select(".text").text(msg) }
+  }
+}
+
+var loader = makeToggle(".overlay");
       
+var notification = makeToggle(".notification");
+  
 var sec2time = (function() {
   var time = d3.utcFormat("%I:%M") // for AM/PM add "%p"
   return function(x) { return time(new Date(x * 1000)); }
@@ -150,6 +168,7 @@ var sec2time = (function() {
 // main
 d3.selectAll("#start, #end, #datetime").on("change", plan);
 flatpickr(".datetime", {});
+d3.selectAll(".notification .delete").on("click", notification.hide);
 
 var stopByName = null;
 
@@ -160,3 +179,4 @@ d3.json(OTP + STOPS + "*", function(stops) {
   new Awesomplete(d3.select("#start").node(), {list: list});
   new Awesomplete(d3.select("#end").node(), {list: list});
 });
+
