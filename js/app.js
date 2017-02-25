@@ -39,6 +39,11 @@ function plan() {
       }
     })
     sched.sort(function(a, b) { return a.start - b.start });
+    sched.forEach(function(s) {
+      s.routes.forEach(function(d) {
+        d.name = d.longName || d.shortName;
+      })
+    })
     table(sched);
   })
 }
@@ -93,20 +98,36 @@ function table(times) {
     .data(times)
     .enter().append("tr");
     
-  rows.append("td").html(function(d) { 
-      return d.routes.map(function(d) { return d.longName || d.shortName }).join(", ")
-    });
+  var labels = rows.append("td").classed("primary", true).html(function(d) { 
+    return d.routes.map(function(d) { 
+      return "<span style='color:#" + d.color + "'>" + d.name + "</span>";
+    }).join(", ")
+  });
   
-  rows.append("td").classed("flexbox", "true").selectAll("span.schedule")
-    .data(function(d) { return d.schedule })
-    .enter().append("span").classed("schedule", true)
+  var schedules = rows.append("td").classed("primary", true)
     .html(function(d) {
-      var st = sec2time(d[0]);
-      var en = sec2time(d[1]); 
-      var time = "<span class='sched-item'>" + st + "</span> <span class='sched-item'>" + en + "</span>";
-      return time; 
+      return sec2time(d.start) + " " + sec2time(d.end);
     });
+      
+  var extraFilter = function(d) { return d.routes.length > 1 }
   
+  labels.filter(extraFilter).append("div").classed("secondary routename", true).style("display", "none").html(function(d) { 
+    return d.routes.map(function(d) { return d.name }).join("<br>")
+  })
+  
+  schedules.filter(extraFilter).append("div").classed("secondary", true).style("display", "none").html(function(d) {
+    return d.schedule.map(function(d) { return sec2time(d[0]) + " " + sec2time(d[1]) }).join("<br>")
+  })  
+  
+  rows.filter(extraFilter).each(function(d) {
+    var visible = false;
+    var prim = d3.select(this).selectAll(".primary");
+    var sec = d3.select(this).selectAll(".secondary");
+    prim.on("click", function() { 
+      sec.style("display", visible ? "none" : null);
+      visible = !visible;
+    })
+  });
 }
       
 var sec2time = (function() {
