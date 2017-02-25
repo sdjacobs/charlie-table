@@ -6,16 +6,6 @@ function planUrl(from, to, date) {
   return OTP + PLAN + "?from=" + from.lat + "," + from.lon + "&to=" + to.lat + "," + to.lon + "&maxWalkTime=10&accessModes=WALK&egressModes=WALK&date=" + date +"&startTime=00:00:00&endTime=23:00:00&limit=4&orderBy=DIFFERENCE";
 }
 
-function loadStops(datalist, auto) {
-  d3.json(OTP + STOPS + auto, function(stops) {
-    datalist.html("");
-    datalist.selectAll("option")
-      .data(stops)
-      .enter().append("option")
-        .attr("value", function(d) { return d.name })
-  });
-}
-
 function plan() {
 
   var stop = function(sel) {
@@ -160,17 +150,18 @@ var sec2time = (function() {
 })()
 
 // main
-d3.selectAll("#start, #end").each(function() {
-  var thiz = d3.select(this)
-  thiz.on("keypress", function() {
-    if (d3.event.charCode == 0)
-      return;
-    var val = this.value + d3.event.key;
-    if (val.length > 2)
-      loadStops(d3.select("#" + thiz.attr("list")), val);
-  })  
-})
-
 d3.selectAll("#start, #end, #datetime").on("change", plan);
-
 flatpickr(".datetime", {});
+
+d3.json(OTP + STOPS + "*", function(stops) {
+  var datalist = d3.select("#startStops")
+  datalist.html("");
+  datalist.selectAll("option")
+   .data(stops)
+    .enter().append("option")
+    .attr("value", function(d) { return d.name });
+  d3.select("#endStops").html(datalist.html());
+    
+  new Awesomplete(d3.select("#start").node(), {list: "#startStops"});
+  new Awesomplete(d3.select("#end").node(), {list: "#endStops"});
+});

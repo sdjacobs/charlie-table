@@ -5,8 +5,13 @@
   <script src="js/lib/d3.v4.min.js"></script>
   <link rel="stylesheet" type="text/css" href='css/bulma.min.css'></link>
   <link rel="stylesheet" href="css/flatpickr.min.css">
+  <link rel="stylesheet" href="css/awesomplete.css">
   <script src="js/lib/flatpickr.js"></script>
+  <script src="js/lib/awesomplete.min.js"></script>
   <style>
+  body, .input {
+    font-family: monospace;
+  }
   .secondary {
     color: grey;
   }
@@ -26,11 +31,11 @@
     <div class="panel-block">
       <div style="width:100%;">
         <p class="control">
-          <input placeholder="Start..." class="input" id="start" list="startStops" />
+          <input placeholder="Start..." class="input awesomplete" id="start" list="startStops" />
         </p>
         <p class="control">
-          <input placeholder="End..." class="input" id="end" list="endStops" />
-        </p>
+          <input placeholder="End..." class="input awesomplete" id="end" list="endStops" />
+        </
         <p class="control">
           <input class="datetime input" id="datetime" type="text" placeholder="Select Date..">
         </p>
@@ -46,4 +51,5 @@
 
   <datalist id="startStops"></datalist>
   <datalist id="endStops"></datalist>
+
 </body>
