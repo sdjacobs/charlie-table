@@ -123,11 +123,11 @@ function table(times) {
       
   var extraFilter = function(d) { return d.routes.length > 1 }
   
-  labels.filter(extraFilter).append("div").classed("secondary routename", true).style("display", "none").html(function(d) { 
+  labels.filter(extraFilter).append("div").classed("secondary routename hidden", true).html(function(d) { 
     return d.routes.map(function(d) { return d.name }).join("<br>")
   })
   
-  schedules.filter(extraFilter).append("div").classed("secondary", true).style("display", "none").html(function(d) {
+  schedules.filter(extraFilter).append("div").classed("secondary hidden", true).html(function(d) {
     return d.schedule.map(function(d) { return sec2time(d[0]) + " " + sec2time(d[1]) }).join("<br>")
   })  
   
@@ -135,8 +135,8 @@ function table(times) {
     var visible = false;
     var prim = d3.select(this).selectAll(".primary");
     var sec = d3.select(this).selectAll(".secondary");
-    prim.on("click", function() { 
-      sec.transition().style("display", visible ? "none" : null);
+    prim.on("click", function() {
+      sec.style("max-height", visible ? null : sec.property("scrollHeight") + "px")
       visible = !visible;
     })
   });
