@@ -167,7 +167,7 @@ function table(times) {
       d3.transition().duration("400").tween("scroll", scrollTween(top));
     })
   
-    makeFixedHeader(head, tbody);
+  makeFixedHeader(head, tbody);
 }
 
 // from https://bl.ocks.org/mbostock/1649463
