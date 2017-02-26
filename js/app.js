@@ -65,7 +65,7 @@ function createAllSchedules(sched, transit) {
     d.routes.push(o.route);
     var sch = [o.orig.realtimeDeparture, o.dest.realtimeArrival];
     d.schedule.push(sch);
-    
+        
     for (var i = 1; i < transit.length; i++) {
       var time = d.schedule[d.schedule.length-1][1];
       var p = findBestTransitObj(time, transit[i]); // next schedule
@@ -74,6 +74,7 @@ function createAllSchedules(sched, transit) {
       d.routes.push(p.route);
       var sch = [p.orig.realtimeDeparture, p.dest.realtimeArrival];
       d.schedule.push(sch);
+      
     }
     
     d.start = d.schedule[0][0];
@@ -102,7 +103,7 @@ function table(times) {
   addColors(times)
   d3.select("#content").html("");
   var table = d3.select("#content").append("table").attr("class", "table is-striped");
-  var head = table.append("thead").html("<th>Route</th><th>Schedule</th>");
+  var head = table.append("thead").html("<th>Route<div id='anchors'/></th><th>Schedule</th>");
   var tbody = table.append("tbody");
 
   var rows = tbody.selectAll("tr")
@@ -147,8 +148,36 @@ function table(times) {
     })
   });
   
-  makeFixedHeader(head, tbody);
+  // anchors
+  var anchors = [{label:"morning", key: 7*3600}, {label:"afternoon", key: 14*3600}, {label:"evening", key: 18*3600} ]
+  anchors.forEach(function(anchor) {
+    rows.filter(function(d) { return d.start >= anchor.key })
+      .each(function(d, i) {
+        if (i == 0)
+          this.id = anchor.label;
+      })
+  });
+  d3.select('#anchors').selectAll(".tag")
+    .data(anchors).enter()
+    .append("span").classed("anchor tag", true)
+    //.attr("href", function(d) { return "#"+d.label })
+    .text(function(d) { return d.label })
+    .on("click", function(d) {
+      var top = d3.select('#' + d.label).node().getBoundingClientRect().top;
+      d3.transition().duration("400").tween("scroll", scrollTween(top));
+    })
+  
+    makeFixedHeader(head, tbody);
+}
 
+// from https://bl.ocks.org/mbostock/1649463
+function scrollTween(offset) {
+  return function() {
+    var top = window.scrollY || document.documentElement.scrollTop;
+    offset += top;
+    var i = d3.interpolateNumber(top, offset);
+    return function(t) { scrollTo(0, i(t)); };
+  };
 }
 
 function makeToggle(sel) {
@@ -194,9 +223,13 @@ function makeFixedHeader(head, body) {
   
   var row = body.insert("tr", ":first-child")
     .style("opacity","0").style("display", "none")
-    .html("<td>place</td><td>holder</td>");
+    .html(head.html());
   
-  window.onscroll = function() {
+  function width(sel) {
+    return body.select(sel).node().clientWidth + "px";
+  }
+  
+  function toggle() {
     var header = d3.select("thead").node()
     var rect = header.getBoundingClientRect();
     if (rect.top <= 0 && !fixed) {
@@ -204,13 +237,12 @@ function makeFixedHeader(head, body) {
       header.style.position = "fixed";
       header.style.top = "-1em";
       fixed = true;
+      th1.style.width = width("tr td:first-child");
+      th2.style.width = width("tr td:last-child");
       initTop = node.parentNode.getBoundingClientRect().top;
-      th1.style.width = body.select("tr td:first-child").node().offsetWidth + "px";
-      th2.style.width = body.select("tr td:last-child").node().offsetWidth + "px";
     }
     else if (node.parentNode.getBoundingClientRect().top >= initTop) {
       row.style("display", "none");
-      console.log("nullout")
       header.style.position = null;
       header.style.top = null;
       th1.style.width = null;
@@ -218,5 +250,9 @@ function makeFixedHeader(head, body) {
       fixed = false;
     }
   }
+  
+  window.onscroll = toggle;
+  
+  return toggle;
 }
 
