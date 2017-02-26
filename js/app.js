@@ -3,7 +3,7 @@ var STOPS = "/otp/routers/default/index/stops/autocomplete/"
 var PLAN = "/otp/routers/default/profile"
 
 function planUrl(from, to, date) {
-  return OTP + PLAN + "?from=" + from.lat + "," + from.lon + "&to=" + to.lat + "," + to.lon + "&maxWalkTime=10&accessModes=WALK&egressModes=WALK&date=" + date +"&startTime=00:00:00&endTime=23:00:00&limit=4&orderBy=DIFFERENCE";
+  return OTP + PLAN + "?from=" + from.lat + "," + from.lon + "&to=" + to.lat + "," + to.lon + "&maxWalkTime=15&accessModes=WALK&egressModes=WALK&date=" + date +"&startTime=00:00:00&endTime=23:00:00&orderBy=AVG";
 }
 
 function plan() {
@@ -24,11 +24,9 @@ function plan() {
     loader.hide()
     notification.hide();
     var sched = [];
-    resp.options.forEach(function(opt) {
-      if (opt.transit) {
-        createAllSchedules(sched, opt.transit);
-      }
-    })
+    resp.schedules.forEach(function(s) {
+      schedObjFromList(sched, s);
+    });
     if (sched.length == 0) {
       notification.notify("No results found. Perhaps there is no data for this date.")
     }
@@ -42,45 +40,19 @@ function plan() {
   })
 }
 
-function findBestTransitObj(time, transit) {
-  var best = null;
-  var bestTime=0;
-  transit.schedule.forEach(function(t) {
-    var thisTime = t.orig.realtimeDeparture;
-    if (thisTime > time + 5) {
-      if (best == null || thisTime < bestTime) {
-        best = t;
-        bestTime = thisTime;
-      }
-    }
-  })
-  return best;
-}
 
-// data object: {"routes": [], "schedule": [[]], "start":_, "end":_}
-function createAllSchedules(sched, transit) {
-  var first = transit[0];
-  first.schedule.forEach(function(o) {
-    var d = {"routes": [], "schedule": [], "start":0, "end":0};
+function schedObjFromList(sched, schedule) {
+  var d = {"routes":[], "schedule":[], "start":0, "end":0}
+  
+  schedule.forEach(function(o) {
     d.routes.push(o.route);
     var sch = [o.orig.realtimeDeparture, o.dest.realtimeArrival];
     d.schedule.push(sch);
-        
-    for (var i = 1; i < transit.length; i++) {
-      var time = d.schedule[d.schedule.length-1][1];
-      var p = findBestTransitObj(time, transit[i]); // next schedule
-      if (p == null)
-        return; // skip to next object.
-      d.routes.push(p.route);
-      var sch = [p.orig.realtimeDeparture, p.dest.realtimeArrival];
-      d.schedule.push(sch);
-      
-    }
-    
-    d.start = d.schedule[0][0];
-    d.end = d.schedule[d.schedule.length-1][1];
-    sched.push(d)
-  })
+  });
+  
+  d.start = d.schedule[0][0];
+  d.end = d.schedule[d.schedule.length-1][1];
+  sched.push(d);
 }
 
 function addColors(times) {
