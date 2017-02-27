@@ -131,7 +131,7 @@ function table(times) {
   });
   d3.select('#anchors').selectAll(".tag")
     .data(anchors).enter()
-    .append("span").classed("anchor tag", true)
+    .append("span").classed("anchor tag is-unselectable is-dark", true)
     //.attr("href", function(d) { return "#"+d.label })
     .text(function(d) { return d.label })
     .on("click", function(d) {
