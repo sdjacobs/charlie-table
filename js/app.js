@@ -1,4 +1,4 @@
-var OTP = "http://localhost:8080"
+var OTP = ""; // local
 var STOPS = "/otp/routers/default/index/stops/autocomplete/"
 var PLAN = "/otp/routers/default/profile"
 
