@@ -50,6 +50,16 @@
     width: 100%;
     margin-top: 1rem;
   }
+  tr td:last-child {
+    min-width: 11em;
+  }
+  tr td:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+  }
   .anchor {
     margin-right: 0.1rem;
     cursor: pointer;
@@ -62,6 +72,7 @@
   <nav class="panel">
     <p class="panel-heading">
       Charlie Table
+      <a href='#' id="about" class="is-pulled-right button is-small is-dark">About</a>
     </p>
     
     <div class="panel-block">
@@ -91,6 +102,25 @@
  
   <div class="overlay"><!-- show loading --></div>
 
+
+  <div id="aboutModal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+      <div class="box">
+        <article class="media">
+          <p>
+            This is an interactive timetable for the MBTA powered by 
+            <a href="http://opentripplanner.org">OpenTripPlanner</a>.
+            Read more <a href="https://github.com/sdjacobs/OpenTripPlanner/blob/charlie-table/readme-charlie-table.md">here</a>.
+          </p>
+          <p>
+            <a href='#' id="aboutClose" class="button is-small is-dark">Close</a>
+          </p>
+        </article>
+      </div>
+    </div>
+  </div>
+  
   <script src="js/app.js"></script>
 
 </body>

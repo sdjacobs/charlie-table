@@ -1,4 +1,4 @@
-var OTP = ""; // local
+var OTP = "http://localhost:8080"; // local
 var STOPS = "/otp/routers/default/index/stops/autocomplete/"
 var PLAN = "/otp/routers/default/profile"
 
@@ -41,17 +41,17 @@ function plan() {
 }
 
 
-function schedObjFromList(sched, schedule) {
+function schedObjFromList(sched, schedObj) {
   var d = {"routes":[], "schedule":[], "start":0, "end":0}
   
-  schedule.forEach(function(o) {
+  schedObj.schedule.forEach(function(o) {
     d.routes.push(o.route);
     var sch = [o.orig.realtimeDeparture, o.dest.realtimeArrival];
     d.schedule.push(sch);
   });
   
-  d.start = d.schedule[0][0];
-  d.end = d.schedule[d.schedule.length-1][1];
+  d.start = d.schedule[0][0] - schedObj.accessTime;
+  d.end = d.schedule[d.schedule.length-1][1] + schedObj.egressTime;
   sched.push(d);
 }
 
@@ -99,18 +99,16 @@ function table(times) {
     .html(function(d) {
       return sec2time(d.start) + " " + sec2time(d.end);
     });
-      
-  var extraFilter = function(d) { return d.routes.length > 1 }
-  
-  labels.filter(extraFilter).append("div").classed("secondary routename hidden", true).html(function(d) { 
+        
+  labels.append("div").classed("secondary routename hidden", true).html(function(d) { 
     return d.routes.map(function(d) { return d.name }).join("<br>")
   })
   
-  schedules.filter(extraFilter).append("div").classed("secondary hidden", true).html(function(d) {
+  schedules.append("div").classed("secondary hidden", true).html(function(d) {
     return d.schedule.map(function(d) { return sec2time(d[0]) + " " + sec2time(d[1]) }).join("<br>")
   })  
   
-  rows.filter(extraFilter).each(function(d) {
+  rows.each(function(d) {
     var visible = false;
     var prim = d3.select(this).selectAll(".primary");
     var sec = d3.select(this).selectAll(".secondary");
@@ -171,7 +169,7 @@ var sec2time = (function() {
 })()
 
 // main
-d3.selectAll("#start, #end, #datetime").on("change", plan);
+d3.select("#datetime").on("change", plan);
 flatpickr(".datetime", {});
 d3.selectAll(".notification .delete").on("click", notification.hide);
 
@@ -183,6 +181,8 @@ d3.json(OTP + STOPS + "*", function(stops) {
   var list = stops.map(function(d) { return d.name } );
   new Awesomplete(d3.select("#start").node(), {list: list});
   new Awesomplete(d3.select("#end").node(), {list: list});
+  
+  d3.selectAll("#start, #end").on("awesomplete-selectcomplete", plan);
 });
 
 function makeFixedHeader(head, body) {
@@ -228,3 +228,11 @@ function makeFixedHeader(head, body) {
   return toggle;
 }
 
+var aboutModal = d3.select("#aboutModal")
+d3.select("#about").on("click", function() {
+  aboutModal.classed("is-active", true);
+})
+d3.select("#aboutClose").on("click", function() {
+  aboutModal.classed("is-active", false);
+})
+    
