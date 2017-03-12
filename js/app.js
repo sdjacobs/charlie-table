@@ -7,6 +7,7 @@ function planUrl(from, to, date) {
 }
 
 function plan() {
+  urlData.set();
 
   var stop = function(sel) {
     var name = d3.select(sel).node().value;
@@ -42,12 +43,13 @@ function plan() {
 
 
 function schedObjFromList(sched, schedObj) {
-  var d = {"routes":[], "schedule":[], "start":0, "end":0}
+  var d = {"routes":[], "schedule":[], "start":0, "end":0, "dest": []}
   
   schedObj.schedule.forEach(function(o) {
     d.routes.push(o.route);
     var sch = [o.orig.realtimeDeparture, o.dest.realtimeArrival];
     d.schedule.push(sch);
+    d.dest.push(o.dest.stopName);
   });
   
   d.start = d.schedule[0][0] - schedObj.accessTime;
@@ -100,8 +102,10 @@ function table(times) {
       return sec2time(d.start) + " " + sec2time(d.end);
     });
         
-  labels.append("div").classed("secondary routename hidden", true).html(function(d) { 
-    return d.routes.map(function(d) { return d.name }).join("<br>")
+  labels.append("div").classed("secondary routename hidden", true).html(function(d) {
+    return d.routes.map(function(r, i) {
+      return r.name + " <i>(to " + d.dest[i] + ")</i>";
+    }).join("<br>")
   })
   
   schedules.append("div").classed("secondary hidden", true).html(function(d) {
@@ -130,7 +134,6 @@ function table(times) {
   d3.select('#anchors').selectAll(".tag")
     .data(anchors).enter()
     .append("span").classed("anchor tag is-unselectable is-dark", true)
-    //.attr("href", function(d) { return "#"+d.label })
     .text(function(d) { return d.label })
     .on("click", function(d) {
       var top = d3.select('#' + d.label).node().getBoundingClientRect().top;
@@ -168,6 +171,45 @@ var sec2time = (function() {
   return function(x) { return time(new Date(x * 1000)); }
 })()
 
+var urlData = (function() {
+    var dataMap = d3.map();
+    function setDataFromHash() {
+      var hash = window.location.hash;
+      hash.split("#").forEach(function(h) {
+        if (h.length > 1) {
+          var arr = h.split("=");
+          if (["start", "end", "date"].indexOf(arr[0]) < 0)
+            return;
+          dataMap.set(arr[0], arr[1]);
+        }
+      });
+    }
+    function getHashFromData() {
+      var s = "";
+      dataMap.each(function(v, k) {
+        s += "#" + k + "=" + v;
+      });
+      return s;
+    }
+    var ret = {
+      "init": function() {
+        setDataFromHash();
+        d3.select("#start").attr("value", dataMap.get("start"));
+        d3.select("#end").attr("value", dataMap.get("end"));
+        d3.select("#datetime").attr("value", dataMap.get("date"));
+        return dataMap.size() == 3;
+      },
+      "set": function() {
+        dataMap.set("start", d3.select("#start").node().value);
+        dataMap.set("end", d3.select("#end").node().value);
+        dataMap.set("date", d3.select("#datetime").node().value);
+        var hash = getHashFromData();
+        window.location.hash = hash;
+      }
+    }
+    return ret;
+})()
+
 // main
 d3.select("#datetime").on("change", plan);
 flatpickr(".datetime", {});
@@ -183,6 +225,9 @@ d3.json(OTP + STOPS + "*", function(stops) {
   new Awesomplete(d3.select("#end").node(), {list: list});
   
   d3.selectAll("#start, #end").on("awesomplete-selectcomplete", plan);
+
+  if (urlData.init())
+    plan();
 });
 
 function makeFixedHeader(head, body) {
@@ -232,7 +277,6 @@ var aboutModal = d3.select("#aboutModal")
 d3.select("#about").on("click", function() {
   aboutModal.classed("is-active", true);
 })
-d3.select("#aboutClose").on("click", function() {
+d3.selectAll("#aboutClose, .modal-background").on("click", function() {
   aboutModal.classed("is-active", false);
-})
-    
+});
