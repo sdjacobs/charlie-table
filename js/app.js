@@ -81,7 +81,7 @@ function table(times) {
   addColors(times)
   d3.select("#content").html("");
   var table = d3.select("#content").append("table").attr("class", "table is-striped");
-  var head = table.append("thead").html("<th>Route<div id='anchors'/></th><th>Schedule</th>");
+  var head = table.append("thead").html("<th>Route<div id='anchors'></div></th><th>Schedule</th>");
   var tbody = table.append("tbody");
 
   var rows = tbody.selectAll("tr")
@@ -104,7 +104,7 @@ function table(times) {
       return sec2time(d.start) + " " + sec2time(d.end);
     });
 
-  var visible = false; // sec.style("max-height", visible ? null : sec.property("scrollHeight") + "px")
+  var visible = false;
   rows.on("click", function(d) {
     loader.show();
     loader.onclick(function() {
@@ -135,7 +135,7 @@ function table(times) {
   });
   d3.select('#anchors').selectAll(".tag")
     .data(anchors).enter()
-    .append("span").classed("anchor tag is-unselectable is-dark", true)
+    .append("a").classed("anchor tag button is-dark is-small", true)
     .text(function(d) { return d.label })
     .on("click", function(d) {
       var top = d3.select('#' + d.label).node().getBoundingClientRect().top;
@@ -199,7 +199,7 @@ var urlData = (function() {
         setDataFromHash();
         d3.select("#start").attr("value", dataMap.get("start"));
         d3.select("#end").attr("value", dataMap.get("end"));
-        d3.select("#datetime").attr("value", dataMap.get("date"));
+        dateObj.setDate(dataMap.get("date"));
         return dataMap.size() == 3;
       },
       "set": function() {
@@ -215,7 +215,7 @@ var urlData = (function() {
 
 // main
 d3.select("#datetime").on("change", plan);
-flatpickr(".datetime", {});
+var dateObj = flatpickr(".datetime", {"dateFormat": "Y-m-d"});
 d3.selectAll(".notification .delete").on("click", notification.hide);
 
 var stopByName = null;
@@ -258,7 +258,7 @@ function makeFixedHeader(head, body) {
     if (rect.top <= 0 && !fixed) {
       row.style("display", null);
       header.style.position = "fixed";
-      header.style.top = "-1em";
+      header.style.top = "-1rem";
       fixed = true;
       th1.style.width = width("tr td:first-child");
       th2.style.width = width("tr td:last-child");
