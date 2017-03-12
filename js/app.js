@@ -43,13 +43,17 @@ function plan() {
 
 
 function schedObjFromList(sched, schedObj) {
-  var d = {"routes":[], "schedule":[], "start":0, "end":0, "dest": []}
+  var d = {"routes":[], "schedule":[], "start":0, "end":0}
   
   schedObj.schedule.forEach(function(o) {
     d.routes.push(o.route);
     var sch = [o.orig.realtimeDeparture, o.dest.realtimeArrival];
     d.schedule.push(sch);
-    d.dest.push(o.dest.stopName);
+    o.route.locations = [{"time": o.orig.realtimeDeparture, "name": o.orig.stopName},
+        {"time": o.dest.realtimeArrival, "name": o.dest.stopName}];
+    var col = d3.color(o.route.color ? "#"+o.route.color : "grey");
+    col.opacity = 0.2;
+    o.route.col = col;
   });
   
   d.start = d.schedule[0][0] - schedObj.accessTime;
@@ -91,35 +95,33 @@ function table(times) {
     d3.select(this).style("background", function(d) { return d.col; })
   })
   
-  var labels = rows.append("td").classed("primary routename", true).html(function(d) { 
-    return d.routes.map(function(d) { 
-      return d.name;
-    }).join(", ")
+  var labels = rows.append("td").classed("primary routename", true).html(function(d) {
+    return d.routes.map(function(d) { return d.name }).join(", ")
   });
   
   var schedules = rows.append("td").classed("primary", true)
     .html(function(d) {
       return sec2time(d.start) + " " + sec2time(d.end);
     });
-        
-  labels.append("div").classed("secondary routename hidden", true).html(function(d) {
-    return d.routes.map(function(r, i) {
-      return r.name + " <i>(to " + d.dest[i] + ")</i>";
-    }).join("<br>")
-  })
-  
-  schedules.append("div").classed("secondary hidden", true).html(function(d) {
-    return d.schedule.map(function(d) { return sec2time(d[0]) + " " + sec2time(d[1]) }).join("<br>")
-  })  
-  
-  rows.each(function(d) {
-    var visible = false;
-    var prim = d3.select(this).selectAll(".primary");
-    var sec = d3.select(this).selectAll(".secondary");
-    prim.on("click", function() {
-      sec.style("max-height", visible ? null : sec.property("scrollHeight") + "px")
-      visible = !visible;
+
+  var visible = false; // sec.style("max-height", visible ? null : sec.property("scrollHeight") + "px")
+  rows.on("click", function(d) {
+    loader.show();
+    loader.onclick(function() {
+      loader.hide();
+      d3.select("#infoPanel").style("max-height", null);
     })
+
+    d3.select("#infoPanel").html("");
+    var panel = d3.select("#infoPanel").append("div").classed("table", true).selectAll(".route-info")
+        .data(d.routes).enter()
+        .append("div").classed("route-info", true);
+    panel.append("strong").html(function(d) { return d.name });
+    panel.selectAll(".location").data(function(d) { return d.locations })
+        .enter().append("p").classed("location", true)
+        .html(function(d) { return sec2time(d.time) + " " + d.name });
+    d3.select("#infoPanel").style("max-height", d3.select("#infoPanel").property("scrollHeight") + "px");
+    visible = true;
   });
   
   // anchors
@@ -158,7 +160,8 @@ function makeToggle(sel) {
   return {
     show: function() { node.style("display", "block"); },
     hide: function() { node.style("display", "none"); },
-    notify: function(msg) { node.style("display", "block").select(".text").text(msg) }
+    notify: function(msg) { node.style("display", "block").select(".text").text(msg) },
+    onclick: function(handler) { node.on("click", handler) }
   }
 }
 
@@ -224,7 +227,10 @@ d3.json(OTP + STOPS + "*", function(stops) {
   new Awesomplete(d3.select("#start").node(), {list: list});
   new Awesomplete(d3.select("#end").node(), {list: list});
   
-  d3.selectAll("#start, #end").on("awesomplete-selectcomplete", plan);
+  d3.selectAll("#start, #end").on("awesomplete-selectcomplete", plan)
+      .on("click", function() {
+        d3.select(this).node().value = null;
+      });
 
   if (urlData.init())
     plan();

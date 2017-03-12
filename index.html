@@ -17,25 +17,13 @@
   .section {
     padding: 1.5rem 1.5rem;
   }
-  
-  .secondary {
-    color: slategrey;
-  }
-  .secondary.routename {
-    margin-left: 1em;
-  }
   .primary.routename {
     font-weight: bold;
-  }
-  .hidden {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.1s ease-out;
   }
   .overlay {
     background: #e9e9e9; 
     display: none;
-    position: absolute;
+    position: fixed;
     top: 0;
     right: 0;
     bottom: 0;
@@ -50,19 +38,44 @@
     width: 100%;
     margin-top: 1rem;
   }
+  tr {
+    cursor: pointer;
+  }
   tr td:last-child {
     min-width: 11em;
   }
   tr td:first-child {
+    max-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
-    -o-text-overflow: ellipsis;
     white-space: nowrap;
-    width: 100%;
   }
   .anchor {
     margin-right: 0.1rem;
     cursor: pointer;
+  }
+  .route-info:not(:last-child) {
+    border-bottom: 1px solid lightgrey;
+  }
+  .route-info {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  #infoPanel .table {
+    padding: 0.5rem;
+    margin-bottom: 0;
+  }
+  #infoPanel {
+    position: fixed;
+    bottom: -0.5rem;
+    width: 97%;
+    left: 1.5%;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.1s ease-out;
+  }
+  #content, #infoPanel {
+    font-size: 12px;
   }
   </style>
 </head>
@@ -97,7 +110,7 @@
     <span class="text"></span>
     <button class="delete"></button>
   </div>
-  
+
   </section>
  
   <div class="overlay"><!-- show loading --></div>
@@ -106,7 +119,7 @@
   <div id="aboutModal" class="modal">
     <div class="modal-background"></div>
     <div class="modal-content">
-      <div class="box">π
+      <div class="box">
         <article class="media">
           <p>
             This is an interactive timetable for the MBTA powered by 
@@ -120,7 +133,10 @@
       </div>
     </div>
   </div>
-  
+
   <script src="js/app.js"></script>
+
+  <div class="card" id="infoPanel">
+  </div>
 
 </body>
