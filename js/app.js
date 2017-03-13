@@ -80,9 +80,9 @@ function addColors(times) {
 function table(times) {
   addColors(times)
   d3.select("#content").html("");
-  var table = d3.select("#content").append("table").attr("class", "table is-striped");
-  var head = table.append("thead").html("<th>Route<div id='anchors'></div></th><th>Schedule</th>");
-  var tbody = table.append("tbody");
+  var tableHead = d3.select("#content").append("table").attr("class", "table tableforhead");
+  var head = tableHead.append("thead").html("<th>Route<div id='anchors'></div></th><th>Schedule</th>");
+  var tbody = d3.select("#content").append("table").attr("class", "table is-striped").append("tbody");
 
   var rows = tbody.selectAll("tr")
     .data(times)
@@ -251,25 +251,28 @@ function makeFixedHeader(head, body) {
   function width(sel) {
     return body.select(sel).node().clientWidth + "px";
   }
-  
+
+  th1.style.width = width("tr td:first-child");
+  th2.style.width = width("tr td:last-child");
+
   function toggle() {
-    var header = d3.select("thead").node()
+    var header = d3.select("thead").node();
+
+    th1.style.width = width("tr td:first-child");
+    th2.style.width = width("tr td:last-child");
+
     var rect = header.getBoundingClientRect();
     if (rect.top <= 0 && !fixed) {
       row.style("display", null);
       header.style.position = "fixed";
       header.style.top = "-1rem";
       fixed = true;
-      th1.style.width = width("tr td:first-child");
-      th2.style.width = width("tr td:last-child");
       initTop = node.parentNode.getBoundingClientRect().top;
     }
     else if (node.parentNode.getBoundingClientRect().top >= initTop) {
       row.style("display", "none");
       header.style.position = null;
       header.style.top = null;
-      th1.style.width = null;
-      th2.style.width = null;
       fixed = false;
     }
   }
