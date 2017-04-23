@@ -178,21 +178,22 @@ var urlData = (function() {
     var dataMap = d3.map();
     function setDataFromHash() {
       var hash = window.location.hash;
-      hash.split("#").forEach(function(h) {
+      hash = hash.slice(1);
+      hash.split("&").forEach(function(h) {
         if (h.length > 1) {
           var arr = h.split("=");
           if (["start", "end", "date"].indexOf(arr[0]) < 0)
             return;
-          dataMap.set(arr[0], arr[1]);
+          dataMap.set(arr[0], decodeURIComponent(arr[1]));
         }
       });
     }
     function getHashFromData() {
       var s = "";
       dataMap.each(function(v, k) {
-        s += "#" + k + "=" + v;
-      });
-      return s;
+        s += "&" + k + "=" + encodeURIComponent(v);
+      })
+      return s.slice(1);
     }
     var ret = {
       "init": function() {
